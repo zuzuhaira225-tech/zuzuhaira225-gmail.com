@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Zahra Bloom Cafe — Lepak, Jawab, Untung</title>
+<style>
+:root{--pink:#f4b9cb;--pink2:#ffe4ec;--cream:#fff8e9;--sage:#9caf98;--sage2:#dce7d5;--gold:#c99a42;--ink:#4d3c42;--white:#fffdf8}
+*{box-sizing:border-box}body{margin:0;background:#f7e8df;color:var(--ink);font-family:ui-rounded,"Trebuchet MS",system-ui,sans-serif;overflow:hidden}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:11px 15px;background:var(--sage);color:#fff;font-weight:800;box-shadow:0 4px 0 #7e9878;transition:.15s}button:hover{filter:brightness(1.04);transform:translateY(-1px)}button:active{transform:translateY(2px);box-shadow:0 2px 0 #7e9878}button.secondary{background:#fff5f7;color:#76515e;box-shadow:0 4px 0 #e7bdca}button.gold{background:var(--gold);box-shadow:0 4px 0 #9f7429}
+#game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;inset:0;pointer-events:none;padding:clamp(8px,2vw,20px);display:flex;flex-direction:column;justify-content:space-between}
+.topbar{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.brand{background:#fffaf0eF;border:1px solid #fff;backdrop-filter:blur(8px);border-radius:18px;padding:10px 14px;box-shadow:0 5px 20px #6e4b3920;max-width:350px}
+.brand strong{display:block;font-size:clamp(15px,2vw,21px);color:#9b5571}.brand small{font-size:11px;letter-spacing:.08em;color:#92705f}
+.stats{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{background:#fffaf0ed;border:1px solid #fff;border-radius:14px;padding:8px 11px;min-width:75px;box-shadow:0 4px 14px #6e4b3920}.stat span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#92705f}.stat b{font-size:17px;color:#73505a}
+.bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}.hint{pointer-events:auto;background:#fffaf0eF;border-radius:14px;padding:10px 13px;font-size:12px;max-width:340px;box-shadow:0 4px 14px #6e4b3920}.controls{pointer-events:auto;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.controls button{padding:9px 12px;font-size:12px}
+#toast{position:absolute;left:50%;top:25%;transform:translate(-50%,-10px);background:#fffaf0f5;padding:12px 18px;border-radius:16px;box-shadow:0 8px 25px #563b4330;font-weight:800;text-align:center;max-width:min(90vw,420px);opacity:0;pointer-events:none;transition:.25s;z-index:4}#toast.show{opacity:1;transform:translate(-50%,0)}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#45323c77;backdrop-filter:blur(5px);padding:15px;z-index:5;overflow:auto}
+.panel{width:min(610px,100%);max-height:94%;overflow:auto;background:var(--cream);border:3px solid #fff;border-radius:26px;padding:clamp(18px,4vw,30px);box-shadow:0 18px 50px #35232b50;text-align:center}
+.flower{font-size:35px;line-height:1.3}.panel h1{margin:4px 0;color:#a65375;font-size:clamp(24px,5vw,38px);line-height:1.1}.panel h2{color:#a65375;margin:8px 0}.slogan{font-style:italic;color:#7f987a;margin:8px 0 18px}.panel p{line-height:1.5}.pill{display:inline-block;background:#f9dce6;padding:6px 10px;border-radius:20px;font-size:12px;font-weight:800;margin:3px}.panel .actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+#quizOverlay{background:#43303c88}
+#quizPanel{text-align:left;width:min(650px,100%)}
+.qtop{display:flex;justify-content:space-between;align-items:center;gap:8px}.timer{font-weight:900;color:#a65375;background:#ffe3eb;padding:8px 12px;border-radius:12px;white-space:nowrap}.track{height:7px;background:#f1d5de;border-radius:20px;overflow:hidden;margin:12px 0}.track div{height:100%;background:var(--gold);width:100%;transition:width .2s}
+#question{font-size:clamp(18px,3vw,23px);font-weight:900;line-height:1.3;margin:16px 0}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:9px}.answer{background:#fff;color:#5d4850;border:2px solid #eed9df;box-shadow:0 3px 0 #e8ccd5;text-align:left;min-height:58px;display:flex;gap:9px;align-items:center}.answer .letter{background:#f7dce5;border-radius:9px;padding:6px 9px;color:#92556e}.answer.correct{border-color:#8aaa81;background:#eff7eb}.answer.wrong{border-color:#d9828f;background:#fff0f1}
+#feedback{margin-top:13px;padding:12px;background:#f6eee1;border-radius:13px;line-height:1.45;display:none}#feedback strong{color:#8c5b32}
+#mobilePad{position:absolute;bottom:85px;left:15px;display:none;gap:5px;pointer-events:auto;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);z-index:3}
+#mobilePad button{padding:0;background:#fffaf0d9;color:#8d6071;box-shadow:0 3px 0 #d7b5bf;font-size:20px;touch-action:none}
+#tapHint{position:absolute;left:50%;bottom:20%;transform:translateX(-50%);background:#fffaf0eF;border-radius:14px;padding:9px 13px;font-size:12px;font-weight:800;display:none;pointer-events:none}
+#confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:8}
+.conf{position:absolute;font-size:24px;animation:fall 2.8s ease-in forwards}@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:0}}
+@media(max-width:650px){.brand{padding:8px 10px}.brand small{display:none}.stats{gap:5px}.stat{padding:6px 8px;min-width:64px}.stat b{font-size:14px}.stat span{font-size:9px}.bottom{align-items:flex-end}.hint{font-size:10px;max-width:210px}.controls{max-width:145px}.controls button{font-size:10px;padding:7px 9px}.answers{grid-template-columns:1fr}.answer{min-height:48px;padding:9px}.panel{border-radius:20px}#mobilePad{display:grid}}
+@media(min-width:651px){#mobilePad{display:none}}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="hud">
+  <div class="topbar">
+    <div class="brand"><strong>🌸 Zahra Bloom Cafe</strong><small>LEPAK, JAWAB, UNTUNG · DOHA, QATAR</small></div>
+    <div class="stats">
+      <div class="stat"><span>💰 Baki</span><b id="money">BND 500</b></div>
+      <div class="stat"><span>🌷 Untung</span><b id="profit">BND 0</b></div>
+      <div class="stat"><span>⭐ Rating</span><b id="rating">5.0</b></div>
+      <div class="stat"><span>☕ Pelanggan</span><b id="progress">0/5</b></div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="hint"><b>WASD / ← ↑ → ↓</b> bergerak · <b>E</b> berinteraksi<br>Telefon: guna pad arah & ketik objek. Cari pelanggan untuk mula!</div>
+    <div class="controls"><button class="secondary" id="howBtn">How to play</button><button class="secondary" id="musicBtn">♫ Muzik: OFF</button><button class="secondary" id="shareBtn">Share</button><button class="secondary" id="resetBtn">Reset</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="tapHint">☕ Ketik pelanggan untuk menerima pesanan</div>
+<div id="mobilePad">
+  <span></span><button data-move="up">▲</button><span></span>
+  <button data-move="left">◀</button><button data-move="down">▼</button><button data-move="right">▶</button>
+</div>
+<div class="overlay" id="startOverlay">
+ <div class="panel">
+  <div class="flower">🌸 ✨ 🌷</div><h1>Zahra Bloom Cafe</h1><div style="font-weight:900;color:#92705f">Lepak, Jawab, Untung</div><div class="slogan">“Bloom Slowly, Sip Happily.”</div>
+  <p><b>Ahlan wa sahlan!</b> Selamat datang ke kafe comel kita di Doha, Qatar. Hidangkan menu halal, jawab 5 soalan Pendidikan Islam Tahun 5 dan kumpul keuntungan.</p>
+  <div><span class="pill">💰 Modal BND 500</span><span class="pill">🧠 5 soalan</span><span class="pill">⏱️ 20 saat setiap soalan</span></div>
+  <p style="font-size:13px;color:#806d70">Bergerak di dalam kafe, cari pelanggan dan tekan <b>E</b> (atau ketik pelanggan). Jawapan betul beri keuntungan dan tip. Tak apa jika tersilap — kita belajar bersama!</p>
+  <div class="actions"><button id="startBtn" class="gold">Mula lepak! ☕</button><button id="startHow" class="secondary">How to play</button></div>
+  <p style="font-size:11px;color:#9b8588">Semua hidangan halal · Syukran kerana singgah 🌼</p>
+ </div>
+</div>
+<div class="overlay" id="howOverlay" style="display:none">
+ <div class="panel"><div class="flower">🪴☕🌸</div><h2>How to play</h2>
+ <p>1. Mula dengan modal <b>BND 500</b>.<br>2. Cari seorang pelanggan dan tekan <b>E</b> atau ketik pelanggan.<br>3. Jawab soalan dalam masa <b>20 saat</b>. Ada 4 pilihan jawapan.<br>4. Jawapan betul: untung <b>BND 150</b>, bonus streak <b>BND 50</b> dan tip pelanggan. Jawab pantas untuk bonus sehingga BND 10!<br>5. Jawapan salah tidak menolak wang. Baca penerangan dan teruskan.<br>6. Capai untung <b>BND 600</b> untuk jadi <b>Zahra Bloom Champion</b>!</p>
+ <p style="font-size:12px">Desktop: WASD / anak panah + E. Mudah alih: pad arah dan ketik pelanggan. Tekan Reset untuk mula semula.</p>
+ <div class="actions"><button id="closeHow">Faham, jom! 🌷</button></div></div>
+</div>
+<div class="overlay" id="quizOverlay" style="display:none">
+ <div class="panel" id="quizPanel">
+  <div class="qtop"><span class="pill" id="qnum">SOALAN 1/5</span><span class="timer" id="timer">⏱ 20s</span></div>
+  <div class="track"><div id="timebar"></div></div>
+  <div style="font-size:12px;color:#92705f;font-weight:800">PESANAN PELANGGAN: <span id="orderName">Gahwa dan kurma</span></div>
+  <div id="question"></div><div class="answers" id="answers"></div><div id="feedback"></div>
+  <div class="actions" id="nextActions" style="display:none"><button id="nextBtn">Pelanggan seterusnya →</button></div>
+ </div>
+</div>
+<div class="overlay" id="endOverlay" style="display:none">
+ <div class="panel"><div class="flower" id="endFlower">🌸🌷🌼</div><h1 id="endTitle">Syukran!</h1><p id="endMessage"></p>
+ <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:15px 0"><span class="pill" id="endProfit">Untung: BND 0</span><span class="pill" id="endCorrect">Betul: 0/5</span><span class="pill" id="endStreak">Streak: 0</span><span class="pill" id="endRating">Rating: 5/5</span></div>
+ <p id="bestScore" style="font-weight:900;color:#9b5571"></p><div class="actions"><button id="retryBtn" class="gold">Cuba lagi 🌷</button><button id="endShare" class="secondary">Share skor</button><button id="endReset" class="secondary">Reset game</button></div>
+ </div>
+</div>
+<div id="confetti"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(()=> {
+'use strict';
+const $=id=>document.getElementById(id);
+const questions=[
+ {q:"Pada hari dan tarikh manakah Nabi Muhammad SAW dilahirkan?",a:["Hari Isnin, 12 Rabiulawal","Hari Jumaat, 12 Rabiulawal","Hari Isnin, 10 Muharam","Hari Khamis, 12 Rejab"],correct:0,ex:"Baginda dilahirkan pada waktu subuh, hari Isnin 12 Rabiulawal."},
+ {q:"Tahun kelahiran Nabi Muhammad SAW dikenali sebagai tahun apa?",a:["Tahun Unta","Tahun Gajah","Tahun Duka Cita","Tahun Hijrah"],correct:1,ex:"Tahun kelahiran baginda dikenali sebagai Tahun Gajah."},
+ {q:"Di manakah Nabi Muhammad SAW dilahirkan?",a:["Madinah","Taif","Makkah","Baitulmaqdis"],correct:2,ex:"Baginda dilahirkan di Makkah."},
+ {q:'Siapakah datuk baginda yang berasa sangat gembira lalu memberi nama "Muhammad"?',a:["Abdul Muttalib","Abu Talib","Abu Lahab","Wahab"],correct:0,ex:'Abdul Muttalib memberi nama "Muhammad" kepada baginda.'},
+ {q:"Siapakah nama bapa dan ibu Nabi Muhammad SAW?",a:["Abu Talib dan Halimah","Abdullah bin Abdul Muttalib dan Aminah binti Wahab","Abdul Muttalib dan Khadijah","Abu Bakar dan Aisyah"],correct:1,ex:"Bapa baginda bernama Abdullah bin Abdul Muttalib dan ibu baginda Aminah binti Wahab. Keturunan baginda bersambung kepada Nabi Ismail AS melalui Nabi Ibrahim AS."}
+];
+const menus=["Gahwa dan kurma","Karak chai","Latte bunga ros","Matcha kelopak","Mojito lemon-pudina"];
+let money=500,profit=0,rating=5,index=0,correctCount=0,streak=0,bestStreak=0,answered=false,remaining=20,timerId=null,started=false,finished=false,order=[],music=false,audioCtx=null,oscillators=[],move={};
+let scene,camera,renderer,player,clock,raycaster,mouse,interactables=[],customerMeshes=[],flowerMeshes=[],target=null,keys={},lastToast=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function updateHUD(){$('money').textContent='BND '+money;$('profit').textContent='BND '+profit;$('rating').textContent=rating.toFixed(1);$('progress').textContent=Math.min(index,5)+'/5'}
+function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(lastToast);lastToast=setTimeout(()=>$('toast').classList.remove('show'),2300)}
+function shuffleAnswers(q){let a=q.a.map((text,i)=>({text,correct:i===q.correct}));for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function makeMat(color,rough=.75,metal=0){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal})}
+function box(parent,x,y,z,sx,sy,sz,color,opts={}){let m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),makeMat(color,opts.rough??.75,opts.metal??0));m.position.set(x,y,z);if(opts.rx)m.rotation.x=opts.rx;if(opts.ry)m.rotation.y=opts.ry;parent.add(m);return m}
+function sphere(parent,x,y,z,r,color,scale=[1,1,1]){let m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),makeMat(color));m.position.set(x,y,z);m.scale.set(...scale);parent.add(m);return m}
+function cylinder(parent,x,y,z,rt,rb,h,color,seg=16){let m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),makeMat(color));m.position.set(x,y,z);parent.add(m);return m}
+function flower(parent,x,y,z,scale=1){let g=new THREE.Group();g.position.set(x,y,z);for(let i=0;i<5;i++){let a=i*Math.PI*2/5;let p=sphere(g,Math.cos(a)*.16,Math.sin(a)*.16,0,.12,['#f3a9c0','#ffd4df','#f7c1cf'][i%3],[1,1,.6]);p.position.z=.04}sphere(g,0,0,.06,.085,'#d7a64b');g.scale.setScalar(scale);parent.add(g);flowerMeshes.push(g);return g}
+function buildCafe(){
+ scene=new THREE.Scene();scene.background=new THREE.Color('#f4e4db');scene.fog=new THREE.Fog('#f4e4db',17,36);
+ camera=new THREE.PerspectiveCamera(56,innerWidth/innerHeight,.1,100);
+ renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;$('game').appendChild(renderer.domElement);
+ scene.add(new THREE.HemisphereLight('#fff4e5','#8a8178',2.1));let light=new THREE.DirectionalLight('#fff5df',2.5);light.position.set(-5,10,6);light.castShadow=true;scene.add(light);
+ // room shell, tiled floor and feature walls
+ box(scene,0,-.18,0,19,.3,16,'#e8d5c8');
+ for(let x=-8;x<=8;x+=2)for(let z=-6;z<=6;z+=2)box(scene,x,-.015,z,1.94,.02,1.94,((x+z)%4===0)?'#f7eadb':'#f0dfd2');
+ box(scene,0,2.2,-8,19,4.7,.25,'#f4dce1');box(scene,-9.5,2.2,0,.25,4.7,16,'#e8c7d1');box(scene,9.5,2.2,0,.25,4.7,16,'#e8c7d1');
+ // huge atrium windows and gold mullions
+ for(let x=-7.5;x<=7.5;x+=2.5){box(scene,x,2.25,-7.82,.07,4.1,.08,'#c79a4a',{metal:.65});}
+ box(scene,0,.25,-7.72,18,.1,.12,'#c79a4a');box(scene,0,4.15,-7.72,18,.1,.12,'#c79a4a');
+ // outside mall atrium glow and floors
+ box(scene,0,1.5,-9.4,18,3,.12,'#d4e7e2');for(let x=-7;x<=7;x+=3)box(scene,x,1.2,-9.32,.08,2.5,.08,'#fff3d8');
+ // ceiling and hanging lanterns
+ box(scene,0,4.65,0,19,.25,16,'#fff5e7');
+ for(let x of [-5,0,5])for(let z of [-4,2]){cylinder(scene,x,4.1,z,.025,.025,.7,'#c99a42');let l=sphere(scene,x,3.65,z,.25,'#f6d98d',[.8,1.2,.8]);let lamp=new THREE.PointLight('#ffdca0',.8,4);lamp.position.set(x,3.55,z);scene.add(lamp);for(let k=0;k<4;k++){let a=k*Math.PI/2;box(scene,x+Math.cos(a)*.19,3.65,z+Math.sin(a)*.19,.035,.34,.035,'#c99a42')}}
+ // flower feature wall, Arabic geometric medallions
+ for(let x=-8.4;x<8.5;x+=.75)for(let y=.6;y<4.2;y+=.65)if(Math.random()>.22)flower(scene,x,y,-7.82,.62);
+ for(let x=-8;x<=8;x+=2){let tor=new THREE.Mesh(new THREE.TorusGeometry(.47,.045,8,4),makeMat('#c99a42',.4,.55));tor.position.set(x,2.5,-7.64);scene.add(tor);sphere(scene,x,2.5,-7.6,.09,'#fff1d1')}
+ // counter
+ box(scene,-5,.65,-3.2,3.5,1.2,1.1,'#c99787');box(scene,-5,1.3,-3.2,3.7,.16,1.25,'#fff2dd');box(scene,-5,.18,-3.2,3.1,.22,1,'#b68172');
+ // display cake and dallah
+ cylinder(scene,-5,1.52,-3.25,.28,.28,.2,'#e4bd65');sphere(scene,-5,1.68,-3.25,.18,'#b87e52',[1,1,.5]);cylinder(scene,-4.1,1.7,-3.2,.14,.12,.34,'#c99a42');sphere(scene,-4.1,1.9,-3.2,.12,'#c99a42',[1,.7,1]);box(scene,-3.9,1.78,-3.2,.3,.04,.05,'#c99a42');
+ // tables, chairs, sofas
+ const tableSpots=[[-2,-1],[2,-2],[5,1],[0,3],[-4,3]];
+ tableSpots.forEach(([x,z],i)=>{cylinder(scene,x,.85,z,.78,.78,.12,'#fff2e4',32);cylinder(scene,x,.43,z,.11,.15,.72,'#c99a42');cylinder(scene,x,.08,z,.48,.48,.08,'#c99a42',24);
+ for(let a=0;a<4;a++){let an=a*Math.PI/2;box(scene,x+Math.cos(an)*1.08,.42,z+Math.sin(an)*1.08,.55,.75,.5,'#b8c9af',{ry:-an});box(scene,x+Math.cos(an)*1.08,.78,z+Math.sin(an)*1.08,.55,.55,.13,'#dba8b7',{ry:-an})}
+ if(i%2===0){flower(scene,x,.99,z,.65);cylinder(scene,x+.38,1.05,z,.08,.08,.12,'#e7b6c4')}
+ });
+ // plush sofa along side
+ box(scene,7,.55,-3,1.4,.7,3.2,'#a8bca0');box(scene,7.55,.95,-3, .3,1.1,3.2,'#8fa58a');for(let z=-4;z<=-2;z+=1)box(scene,6.95,.95,z,.95,.65,.88,'#b7c9ae');
+ // rugs
+ box(scene,0,.015,1,5,.025,2.5,'#d6b8a4');for(let x=-2;x<=2;x+=.5)box(scene,x,.032,1,.025,.01,2.25,'#b78b78');
+ // planters and flowers
+ for(let x of [-8,8])for(let z of [-5,4]){cylinder(scene,x,.35,z,.45,.55,.7,'#d6a1af');for(let j=0;j<7;j++){let a=j*Math.PI*2/7;let fx=x+Math.cos(a)*.35,fz=z+Math.sin(a)*.35;box(scene,fx,.9,fz,.05,.8,.05,'#799773');flower(scene,fx,1.35,fz,.85)}}
+ // decorative Qatar-inspired geometric screen
+ for(let z=-1;z<=3;z+=.65){for(let x=8.75;x<9;x+=.2){box(scene,x,1.8,z,.08,.08,.08,'#c99a42')}}
+ // player stylized avatar
+ player=new THREE.Group();sphere(player,0,1.45,0,.28,'#e3ad89',[.8,1.1,.8]);sphere(player,0,1.82,0,.29,'#5c4248',[1,1,.9]);box(player,0,1.02,0,.55,.65,.32,'#dba5b8');box(player,-.17,.52,0,.16,.42,.2,'#8fa58a');box(player,.17,.52,0,.16,.42,.2,'#8fa58a');box(player,-.35,1.05,0,.16,.5,.18,'#e3ad89');box(player,.35,1.05,0,.16,.5,.18,'#e3ad89');player.position.set(0,0,5);scene.add(player);
+ // customers and floating interaction markers
+ const positions=[[-2,0,-1],[2,0,-2],[5,0,1],[0,0,3],[-4,0,3]];
+ positions.forEach((p,i)=>{let g=new THREE.Group();sphere(g,0,1.2,0,.24,['#bd806d','#8d6c54','#d4a47f','#a77e72','#b78b79'][i]);sphere(g,0,1.55,0,.25,['#503d44','#5a4236','#3d3838','#6a4d45','#44352e'][i]);box(g,0,.72,0,.48,.62,.3,['#9caf98','#e9b7c8','#e2c27e','#9cafc0','#c7a2c7'][i]);box(g,-.3,.75,0,.13,.42,.14,'#bd8a72');box(g,.3,.75,0,.13,.42,.14,'#bd8a72');g.position.set(p[0],0,p[2]);scene.add(g);g.userData={customer:true,idx:i};customerMeshes.push(g);interactables.push(g);
+ let marker=new THREE.Group();marker.position.set(p[0],2.2,p[2]);sphere(marker,0,0,0,.15,'#fff3d0');flower(marker,0,.02,0,.65);scene.add(marker);marker.userData.baseY=2.2;marker.userData.phase=Math.random()*6;flowerMeshes.push(marker);
+ });
+ // menu signs and pot decorations
+ box(scene,-7,1.5,1,1.2,1.5,.12,'#fff5e8');box(scene,-7,1.5,.91,1.05,1.34,.03,'#b6c9aa');for(let y=1.9;y>1;y-=.3)box(scene,-7,y,.87,.7,.035,.025,'#c99a42');
+ for(let x=-8;x<=8;x+=4){cylinder(scene,x,.35,6,.32,.38,.6,'#d7b1a7');for(let j=0;j<4;j++){flower(scene,x+(j-1.5)*.12,.85,6,.55)}}
+ raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();clock=new THREE.Clock();
+ window.addEventListener('resize',onResize);renderer.domElement.addEventListener('pointerdown',onCanvasTap);
+ animate();
+}
+function onResize(){if(!camera||!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}
+function onCanvasTap(e){if(!started||finished||$('quizOverlay').style.display!=='none')return;let r=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(mouse,camera);let hits=raycaster.intersectObjects(customerMeshes,true);if(hits.length){let obj=hits[0].object;while(obj&&!obj.userData.customer)obj=obj.parent;if(obj&&obj.userData.customer)interactCustomer(obj.userData.idx)}}
+function animate(){requestAnimationFrame(animate);if(!renderer)return;let dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+ if(started&&!finished&&$('quizOverlay').style.display==='none'){let dx=0,dz=0;const speed=3.2;if(keys.KeyW||keys.ArrowUp||move.up)dz-=1;if(keys.KeyS||keys.ArrowDown||move.down)dz+=1;if(keys.KeyA||keys.ArrowLeft||move.left)dx-=1;if(keys.KeyD||keys.ArrowRight||move.right)dx+=1;let len=Math.hypot(dx,dz);if(len){player.position.x=clamp(player.position.x+dx/len*speed*dt,-8.4,8.4);player.position.z=clamp(player.position.z+dz/len*speed*dt,-6.5,6.5);player.rotation.y=Math.atan2(dx,dz)}}
+ customerMeshes.forEach((g,i)=>{g.position.y=Math.sin(t*1.5+i)*.025;});scene.traverse(o=>{if(o.userData&&o.userData.phase!==undefined)o.position.y=o.userData.baseY+Math.sin(t*2+o.userData.phase)*.08});
+ let desired=new THREE.Vector3(player.position.x+7,6.8,player.position.z+9);camera.position.lerp(desired,.06);camera.lookAt(player.position.x,1,player.position.z-1);
+ renderer.render(scene,camera);
+}
+function interactCustomer(i){if(!started||finished||$('quizOverlay').style.display!=='none')return;if(i<index){toast('Pelanggan ini sudah dilayan. Cari pelanggan seterusnya!');return}if(i>index){toast('Jom ikut giliran pelanggan ya 🌷');return}openQuestion()}
+function openQuestion(){if(index>=5)return;answered=false;remaining=20;$('quizOverlay').style.display='flex';$('qnum').textContent='SOALAN '+(index+1)+'/5';$('orderName').textContent=menus[index];$('question').textContent=questions[index].q;$('feedback').style.display='none';$('nextActions').style.display='none';$('answers').innerHTML='';order=shuffleAnswers(questions[index]);order.forEach((a,i)=>{let b=document.createElement('button');b.className='answer';b.innerHTML='<span class="letter">'+String.fromCharCode(65+i)+'</span><span>'+a.text+'</span>';b.onclick=()=>chooseAnswer(i);$('answers').appendChild(b)});updateTimer();clearInterval(timerId);timerId=setInterval(()=>{remaining--;updateTimer();if(remaining<=0){clearInterval(timerId);chooseAnswer(-1)}},1000)}
+function updateTimer(){$('timer').textContent='⏱ '+remaining+'s';$('timebar').style.width=(remaining/20*100)+'%';$('timebar').style.background=remaining<=5?'#d9828f':'#c99a42'}
+function chooseAnswer(i){if(answered)return;answered=true;clearInterval(timerId);let good=i>=0&&order[i].correct;let buttons=[...$('answers').children];buttons.forEach((b,j)=>{b.disabled=true;if(order[j].correct)b.classList.add('correct');if(j===i&&!good)b.classList.add('wrong')});
+ if(good){correctCount++;streak++;bestStreak=Math.max(bestStreak,streak);let tip=20,fast=Math.ceil(remaining/2);let gain=150+(streak>1?50:0)+Math.min(10,fast)+tip;money+=gain;profit+=gain;rating=Math.min(5,rating+.05);$('feedback').innerHTML='🌟 <strong>Hebat! Pesanan sempurna.</strong> Untung +BND '+(150+(streak>1?50:0))+' · Tip BND 20 · Bonus pantas BND '+Math.min(10,fast)+'.<br>'+questions[index].ex}
+ else{streak=0;rating=Math.max(1,rating-.5);$('feedback').innerHTML='🌱 <strong>Tak apa, kita belajar sama-sama!</strong> Jawapan betul: <b>'+questions[index].a[questions[index].correct]+'</b>.<br>'+questions[index].ex}
+ $('feedback').style.display='block';$('nextActions').style.display='flex';$('nextBtn').textContent=index===4?'Lihat keputusan ✨':'Pelanggan seterusnya →';updateHUD();saveBest()}
+function nextQuestion(){index++;$('quizOverlay').style.display='none';if(index>=5)endGame();else{toast('Syukran! Cari pelanggan '+(index+1)+' 🌷');}}
+function saveBest(){let old=Number(localStorage.getItem('zahraBloomBest')||0);if(profit>old){localStorage.setItem('zahraBloomBest',String(profit))}}
+function endGame(){finished=true;$('endOverlay').style.display='flex';$('endProfit').textContent='Untung: BND '+profit;$('endCorrect').textContent='Betul: '+correctCount+'/5';$('endStreak').textContent='Streak terbaik: '+bestStreak;$('endRating').textContent='Rating: '+rating.toFixed(1)+'/5';$('bestScore').textContent='🏆 Skor tertinggi: BND '+(localStorage.getItem('zahraBloomBest')||0);
+ if(profit>=600){$('endTitle').textContent='Zahra Bloom Champion!';$('endMessage').textContent='Tahniah! Jawab dengan betul, untung berganda. Kafe kita mekar kerana usaha kamu!';$('endFlower').textContent='🌸🌼🌷✨🌺';bloomConfetti()}else{$('endTitle').textContent='Syukran, barista hebat!';$('endMessage').textContent='Usaha yang baik! Baca semula penerangan dan cuba lagi. Setiap cubaan membantu kamu belajar.';$('endFlower').textContent='🌱🌷☕'}}
+function bloomConfetti(){let c=$('confetti');c.innerHTML='';for(let i=0;i<38;i++){let s=document.createElement('span');s.className='conf';s.textContent=['🌸','🌷','🌼','✨','💮'][i%5];s.style.left=Math.random()*100+'%';s.style.top=(-Math.random()*30)+'px';s.style.animationDelay=Math.random()*.9+'s';c.appendChild(s)}setTimeout(()=>c.innerHTML='',4000)}
+function resetGame(){clearInterval(timerId);money=500;profit=0;rating=5;index=0;correctCount=0;streak=0;bestStreak=0;answered=false;started=false;finished=false;updateHUD();$('quizOverlay').style.display='none';$('endOverlay').style.display='none';$('howOverlay').style.display='none';$('startOverlay').style.display='flex';$('confetti').innerHTML='';player.position.set(0,0,5);toast('Kafe sudah dikemas semula 🌸')}
+function startGame(){resetStateOnly();$('startOverlay').style.display='none';started=true;toast('Ahlan wa sahlan! Cari pelanggan pertama ☕')}
+function resetStateOnly(){clearInterval(timerId);money=500;profit=0;rating=5;index=0;correctCount=0;streak=0;bestStreak=0;answered=false;finished=false;updateHUD();$('quizOverlay').style.display='none';$('endOverlay').style.display='none';player.position.set(0,0,5)}
+function share(){let text=`🌸 Zahra Bloom Cafe — Lepak, Jawab, Untung!\nSkor saya: BND ${profit} untung, ${correctCount}/5 jawapan betul.\n“Bloom Slowly, Sip Happily.” Jom cuba!`;if(navigator.share)navigator.share({title:'Zahra Bloom Cafe',text}).catch(()=>{});else if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>toast('Skor disalin! Boleh kongsi dengan kawan 🌷')).catch(()=>prompt('Salin mesej ini:',text))}else prompt('Salin mesej ini:',text)}
+function toggleMusic(){music=!music;$('musicBtn').textContent='♫ Muzik: '+(music?'ON':'OFF');if(music){try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();audioCtx.resume();oscillators.forEach(o=>{try{o.stop()}catch(e){}});oscillators=[];let master=audioCtx.createGain();master.gain.value=.035;master.connect(audioCtx.destination);[261.63,329.63,392,329.63].forEach((freq,i)=>{let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=freq;g.gain.value=.17;o.connect(g);g.connect(master);o.start();oscillators.push(o);let lfo=audioCtx.createOscillator(),lg=audioCtx.createGain();lfo.frequency.value=.12+i*.03;lg.gain.value=5;lfo.connect(lg);lg.connect(o.frequency);lfo.start();oscillators.push(lfo)})}catch(e){toast('Audio tidak tersedia pada peranti ini.')}}else{oscillators.forEach(o=>{try{o.stop()}catch(e){}});oscillators=[];if(audioCtx)audioCtx.suspend()}}
+$('startBtn').onclick=startGame;$('startHow').onclick=()=>$('howOverlay').style.display='flex';$('howBtn').onclick=()=>$('howOverlay').style.display='flex';$('closeHow').onclick=()=>$('howOverlay').style.display='none';$('musicBtn').onclick=toggleMusic;$('shareBtn').onclick=share;$('endShare').onclick=share;$('resetBtn').onclick=resetGame;$('endReset').onclick=resetGame;$('retryBtn').onclick=()=>{resetStateOnly();$('endOverlay').style.display='none';started=true;toast('Pusingan baharu bermula! 🌷')};$('nextBtn').onclick=nextQuestion;
+window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE'&&started&&!finished&&$('quizOverlay').style.display==='none'){let nearest=999,idx=-1;customerMeshes.forEach((g,i)=>{let d=player.position.distanceTo(g.position);if(d<nearest){nearest=d;idx=i}});if(nearest<3.3)interactCustomer(idx);else toast('Dekati pelanggan dahulu 🌸')}});
+window.addEventListener('keyup',e=>keys[e.code]=false);
+document.querySelectorAll('#mobilePad button').forEach(b=>{let k=b.dataset.move;b.addEventListener('pointerdown',e=>{e.preventDefault();move[k]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>move[k]=false))});
+buildCafe();updateHUD();
+})();
+</script>
+</body>
+</html>
